@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        // Define the environment variable for Google Cloud credentials
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account')  // This is the Jenkins Secret ID for your GCP credentials
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account')
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/nikhilvadla500/Kubernetes-to-jenkins.git'
@@ -15,31 +15,24 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                script {
-                    // Initialize the Terraform working directory
-                    withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                        sh 'terraform init'
-                    }
+                withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    sh 'terraform init -var="gcp_credentials=${GOOGLE_APPLICATION_CREDENTIALS}"'
                 }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                script {
-                    withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                        sh 'terraform plan'
-                    }
+                withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    sh 'terraform plan -var="gcp_credentials=${GOOGLE_APPLICATION_CREDENTIALS}"'
                 }
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                script {
-                    withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                        sh 'terraform apply -auto-approve'
-                    }
+                withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    sh 'terraform apply -var="gcp_credentials=${GOOGLE_APPLICATION_CREDENTIALS}" -auto-approve'
                 }
             }
         }
